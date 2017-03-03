@@ -3,9 +3,14 @@ import {
   PrecompileOptions
 } from "@glimmer/compiler";
 import { 
-  TemplateJavascript 
+  TemplateJavascript,
+  TemplateMeta as GlimmerTemplateMeta
 } from "@glimmer/wire-format";
 
-export function precompile(template: string, options: PrecompileOptions): TemplateJavascript {
-  return JSON.parse(glimmerPrecompile(template, options));
+export interface TemplateMeta extends GlimmerTemplateMeta {
+  specifier: string;
+}
+
+export function precompile(template: string, options: PrecompileOptions<TemplateMeta>): TemplateJavascript {
+  return glimmerPrecompile(template, options);
 }

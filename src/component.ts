@@ -1,6 +1,7 @@
 import { getOwner, setOwner } from '@glimmer/di';
 import { DirtyableTag } from '@glimmer/reference';
-import { Simple, Environment } from '@glimmer/runtime';
+import { Simple, Environment, Component as GlimmerComponent } from '@glimmer/runtime';
+import { Opaque } from '@glimmer/util';
 
 export interface ComponentOptions {
   parent?: Component;

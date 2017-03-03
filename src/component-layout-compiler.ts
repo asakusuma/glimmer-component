@@ -14,7 +14,7 @@ export default class ComponentLayoutCompiler {
 
   compile(builder: ComponentLayoutBuilder) {
     let env = builder.env;
-    let factory = templateFactory(this.template);
+    let factory = templateFactory(JSON.parse(this.template));
     let layout = factory.create(env).asLayout();
     builder.fromLayout(layout);
     builder.attrs.static('class', 'glimmer-component');

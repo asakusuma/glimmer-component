@@ -4,9 +4,9 @@ import {
 } from '@glimmer/di';
 import {
   Bounds,
-  CompiledBlock,
+  CompiledProgram,
   ComponentManager as GlimmerComponentManager,
-  Environment,
+  Component as GlimmerComponent,
   EvaluatedArgs,
   PrimitiveReference,
   Simple,
@@ -22,16 +22,17 @@ import {
 import { Opaque } from '@glimmer/util';
 import Component, { ComponentOptions } from './component';
 import ComponentDefinition from './component-definition';
+import Environment from './environment';
 
 export function GlimmerID(vm: VM): PathReference<string> {
   let self = vm.getSelf().value() as { _guid: string };
   return PrimitiveReference.create(`glimmer${self._guid}`);
 }
 
-export default class ComponentManager implements GlimmerComponentManager<Component> {
+export default class ComponentManager<GlimmerComponent> implements GlimmerComponentManager<Component> {
   private env: Environment;
 
-  static create(env: Environment): ComponentManager {
+  static create(env: Environment) {
     return new ComponentManager(env);
   }
 
@@ -39,11 +40,11 @@ export default class ComponentManager implements GlimmerComponentManager<Compone
     this.env = env;
   }
 
-  prepareArgs(definition: ComponentDefinition, args: EvaluatedArgs): EvaluatedArgs {
+  prepareArgs(definition: ComponentDefinition<Component>, args: EvaluatedArgs): EvaluatedArgs {
     return args;
   }
 
-  create(environment: Environment, definition: ComponentDefinition, args: EvaluatedArgs): Component {
+  create(environment: Environment, definition: ComponentDefinition<Component>, args: EvaluatedArgs) {
     let options: ComponentOptions = {
       args: args.named.value()
     };
@@ -60,7 +61,7 @@ export default class ComponentManager implements GlimmerComponentManager<Compone
     return component;
   }
 
-  layoutFor(definition: ComponentDefinition, component: Component, env: Environment): CompiledBlock {
+  layoutFor(definition: ComponentDefinition<Component>, component: Component, env: Environment): CompiledProgram {
     return env.compiledLayouts[definition.name];
   }
 

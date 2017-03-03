@@ -1,5 +1,5 @@
 import {
-  CompiledBlock,
+  CompiledProgram,
   ComponentClass,
   DOMChanges,
   DOMTreeConstruction,
@@ -62,7 +62,7 @@ export default class Environment extends GlimmerEnvironment implements Standalon
   private components = dict<ComponentDefinition<Component>>();
   private uselessAnchor: HTMLAnchorElement;
   private componentManager: ComponentManager<Component>;
-  public compiledLayouts = dict<CompiledBlock>();
+  public compiledLayouts = dict<CompiledProgram>();
 
   static create(options: EnvironmentOptions = {}) {
     options.document = options.document || self.document;
@@ -104,7 +104,7 @@ export default class Environment extends GlimmerEnvironment implements Standalon
     this.components[name] = componentDef;
 
     // TODO - allow templates to be defined on the component class itself?
-    let componentLayout = this.getCompiledBlock(ComponentLayoutCompiler, template);
+    let componentLayout = this.getCompiledProgram(ComponentLayoutCompiler, template);
     this.compiledLayouts[name] = componentLayout;
 
     return componentDef;
@@ -175,7 +175,7 @@ export default class Environment extends GlimmerEnvironment implements Standalon
   }
 
   // a Compiler can wrap the template so it needs its own cache
-  getCompiledBlock(Compiler: any, template: string): CompiledBlock {
+  getCompiledProgram(Compiler: any, template: string): CompiledProgram {
     let compilable = new Compiler(template);
     return compileLayout(compilable, this);
   }

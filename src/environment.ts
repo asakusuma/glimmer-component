@@ -1,6 +1,6 @@
 import {
   Environment,
-  CompiledBlock
+  CompiledProgram
 } from '@glimmer/runtime';
 
 import {
@@ -8,7 +8,7 @@ import {
 } from '@glimmer/util';
 
 interface StandaloneEnvironment extends Environment {
-  compiledLayouts: Dict<CompiledBlock>;
+  compiledLayouts: Dict<CompiledProgram>;
 };
 
 export default StandaloneEnvironment;
