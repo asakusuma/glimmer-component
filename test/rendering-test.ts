@@ -1,6 +1,7 @@
 import { UpdatableReference } from '@glimmer/object-reference';
 import { OWNER } from '@glimmer/di';
 import { templateFactory } from '@glimmer/runtime';
+import { SerializedTemplateWithLazyBlock } from '@glimmer/wire-format';
 import Component from '../src/component';
 import ComponentManager from '../src/component-manager';
 import DynamicScope from './test-helpers/dynamic-scope';
@@ -19,9 +20,9 @@ test('A component can be rendered in a template', function(assert) {
     '<h1>Hello {{@name}}!</h1>', 
     { meta: { specifier: 'template:/app/components/hello-world' }});
 
-  let mainTemplate = precompile(
+  let mainTemplate: SerializedTemplateWithLazyBlock<{}> = JSON.parse(precompile(
     '<hello-world @name={{salutation}} />', 
-    { meta: { specifier: 'template:/app/main/main' }});
+    { meta: { specifier: 'template:/app/main/main' }}));
 
   let app = {};
   let env = Environment.create({[OWNER]: app});

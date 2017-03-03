@@ -3,8 +3,8 @@ import {
   ComponentClass,
   DOMChanges,
   DOMTreeConstruction,
-  Environment as GlimmerEnvironment,
   EvaluatedArgs,
+  Environment as GlimmerEnvironment,
   Helper as GlimmerHelper,
   ModifierManager,
   PartialDefinition,
@@ -40,6 +40,7 @@ import {
   setOwner,
   Owner
 } from '@glimmer/di';
+import StandaloneEnvironment from '../../src/environment';
 import Component from '../../src/component';
 import ComponentFactory from '../../src/component-factory';
 import ComponentDefinition from '../../src/component-definition';
@@ -50,18 +51,18 @@ import Iterable from './iterable';
 type KeyFor<T> = (item: Opaque, index: T) => string;
 
 export interface EnvironmentOptions {
-  document?: Simple.Document;
+  document?: HTMLDocument;
   appendOperations?: DOMTreeConstruction;
 }
 
-export default class Environment extends GlimmerEnvironment {
+export default class Environment extends GlimmerEnvironment implements StandaloneEnvironment {
   private helpers = dict<GlimmerHelper>();
   private modifiers = dict<ModifierManager<Opaque>>();
   private partials = dict<PartialDefinition<{}>>();
-  private components = dict<ComponentDefinition>();
-  private uselessAnchor: Simple.HTMLAnchorElement;
-  private componentManager: ComponentManager;
-  public compiledLayouts = dict<any>();
+  private components = dict<ComponentDefinition<Component>>();
+  private uselessAnchor: HTMLAnchorElement;
+  private componentManager: ComponentManager<Component>;
+  public compiledLayouts = dict<CompiledBlock>();
 
   static create(options: EnvironmentOptions = {}) {
     options.document = options.document || self.document;
@@ -71,16 +72,16 @@ export default class Environment extends GlimmerEnvironment {
   }
 
   constructor(options: EnvironmentOptions) {
-    super({ appendOperations: options.appendOperations, updateOperations: new DOMChanges(options.document as Simple.Document) });
+    super({ appendOperations: options.appendOperations, updateOperations: new DOMChanges(options.document as HTMLDocument) });
 
     setOwner(this, getOwner(options));
 
     // TODO - allow more than one component manager per environment
-    this.componentManager = new ComponentManager(this);
+    this.componentManager = new ComponentManager<Component>(this);
 
     // TODO - required for `protocolForURL` - seek alternative approach
     // e.g. see `installPlatformSpecificProtocolForURL` in Ember
-    this.uselessAnchor = options.document.createElement('a') as Simple.HTMLAnchorElement;
+    this.uselessAnchor = options.document.createElement('a') as HTMLAnchorElement;
   }
 
   begin() {
@@ -98,8 +99,8 @@ export default class Environment extends GlimmerEnvironment {
     return this.uselessAnchor.protocol;
   }
 
-  registerComponent(name: string, ComponentClass: ComponentClass, template: string): ComponentDefinition {
-    let componentDef: ComponentDefinition = new ComponentDefinition(name, this.componentManager, ComponentClass);
+  registerComponent(name: string, ComponentClass: ComponentClass, template: string): ComponentDefinition<Component> {
+    let componentDef: ComponentDefinition<Component> = new ComponentDefinition(name, this.componentManager, ComponentClass);
     this.components[name] = componentDef;
 
     // TODO - allow templates to be defined on the component class itself?
@@ -119,40 +120,34 @@ export default class Environment extends GlimmerEnvironment {
     return partial;
   }
 
-  hasComponentDefinition(name: string[], symbolTable: SymbolTable): boolean {
+  hasComponentDefinition(name: string, symbolTable: SymbolTable): boolean {
     return !!this.getComponentDefinition(name, symbolTable);
   }
 
-  getComponentDefinition(componentName: string[], symbolTable: SymbolTable): ComponentDefinition {
-    let name = componentName[0];
-
+  getComponentDefinition(name: string, symbolTable: SymbolTable): ComponentDefinition<Opaque> {
     return this.components[name];
   }
 
-  hasHelper(helperName: string[], blockMeta: TemplateMeta) {
-    return helperName.length === 1 && (<string>helperName[0] in this.helpers);
+  hasHelper(helperName: string, blockMeta: TemplateMeta) {
+    return helperName in this.helpers;
   }
 
-  lookupHelper(helperName: string[], blockMeta: TemplateMeta) {
-    let name = helperName[0];
-
+  lookupHelper(name: string, blockMeta: TemplateMeta) {
     let helper = this.helpers[name];
 
-    if (!helper) throw new Error(`Helper for ${helperName.join('.')} not found.`);
+    if (!helper) throw new Error(`Helper for ${name} not found.`);
 
     return helper;
   }
 
-  hasModifier(modifierName: string[], blockMeta: TemplateMeta): boolean {
-    return modifierName.length === 1 && (<string>modifierName[0] in this.modifiers);
+  hasModifier(modifierName: string, blockMeta: TemplateMeta): boolean {
+    return modifierName in this.modifiers;
   }
 
-  lookupModifier(modifierName: string[], blockMeta: TemplateMeta): ModifierManager<Opaque> {
-    let [name] = modifierName;
-
+  lookupModifier(name: string, blockMeta: TemplateMeta): ModifierManager<Opaque> {
     let modifier = this.modifiers[name];
 
-    if(!modifier) throw new Error(`Modifier for ${modifierName.join('.')} not found.`);
+    if(!modifier) throw new Error(`Modifier for ${name} not found.`);
     return modifier;
   }
 
